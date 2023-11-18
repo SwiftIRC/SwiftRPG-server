@@ -12,7 +12,6 @@ struct NoiseTemplate {
 
 pub struct Noise {
     noise: Fbm<Perlin>,
-    seed: u32,
     name: String,
 }
 
@@ -60,7 +59,6 @@ pub fn generate_map() -> Vec<Noise> {
                 .set_persistence(t.persistence)
                 .set_lacunarity(t.lacunarity)
                 .set_octaves(t.octaves),
-            seed: CURRENT_SEED + i as u32,
             name: t.name.to_owned(),
         });
 
