@@ -1,6 +1,6 @@
 extern crate noise;
 
-use noise::*;
+use noise::{utils::*, *};
 
 fn main() {
     generate_map();
@@ -45,6 +45,7 @@ fn get_map_types() -> Vec<NoiseTemplate> {
         },
     ]
 }
+
 fn generate_map() {
     const CURRENT_SEED: u32 = 10000;
 
@@ -71,6 +72,22 @@ fn generate_map() {
             "{}: {}",
             noises[i].name,
             noises[i].noise.get([100.5, 100.5])
-        )
+        );
+
+        imagerender_mapbuilder(&noises[i].noise, &format!("{}.png", noises[i].name));
     });
+}
+
+fn imagerender_mapbuilder(noise_map: &noise::Fbm<noise::Perlin>, filename: &str) {
+    ImageRenderer::new()
+        .render(
+            &PlaneMapBuilder::<&noise::Cache<&noise::Fbm<noise::Perlin>>, 2>::new(&Cache::new(
+                &noise_map,
+            ))
+            .set_size(16, 16)
+            .set_x_bounds(-1.0, 1.0)
+            .set_y_bounds(-1.0, 1.0)
+            .build(),
+        )
+        .write_to_file(filename);
 }
