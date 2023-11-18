@@ -1,5 +1,5 @@
 [package]
-name = "swiftrpc-server"
+name = "swiftrpg-server"
 version = "0.1.0"
 edition = "2021"
 
