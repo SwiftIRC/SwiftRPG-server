@@ -21,22 +21,22 @@ fn get_map_types() -> Vec<NoiseTemplate> {
             name: "height".to_string(),
             frequency: 1.0,
             persistence: 0.5,
-            lacunarity: 2.208984375,
-            octaves: 14,
+            lacunarity: 1.608984375,
+            octaves: 4,
         },
         NoiseTemplate {
             name: "temperature".to_string(),
             frequency: 1.0,
             persistence: 0.5,
             lacunarity: 1.8,
-            octaves: 14,
+            octaves: 4,
         },
         NoiseTemplate {
             name: "humidity".to_string(),
             frequency: 1.0,
             persistence: 0.5,
             lacunarity: 2.1,
-            octaves: 14,
+            octaves: 4,
         },
     ]
 }
@@ -113,4 +113,64 @@ fn get_point(point: [f64; 2], seed: &str) -> Vec<f64> {
     });
 
     points
+}
+
+fn get_biome(point: [f64; 2], seed: &str) -> String {
+    let points = get_point(point, seed);
+
+    let height = points[0];
+    let temperature = points[1];
+    let humidity = points[2];
+
+    let mut biome = String::new();
+
+    if height < 0.0 {
+        biome = "ocean".to_string();
+    } else if height < 0.1 {
+        biome = "beach".to_string();
+    } else if height > 0.8 {
+        biome = "snow".to_string();
+    } else if height > 0.6 {
+        biome = "tundra".to_string();
+    } else if height > 0.1 {
+        if temperature < 0.25 {
+            biome = "bare".to_string();
+        } else if temperature < 0.6 {
+            biome = "taiga".to_string();
+        } else {
+            biome = "shrubland".to_string();
+        }
+    } else {
+        if temperature < 0.25 {
+            if humidity < 0.33 {
+                biome = "scorched".to_string();
+            } else if humidity < 0.66 {
+                biome = "temperate desert".to_string();
+            } else {
+                biome = "desert".to_string();
+            }
+        } else if temperature < 0.6 {
+            if humidity < 0.16 {
+                biome = "tundra".to_string();
+            } else if humidity < 0.50 {
+                biome = "grassland".to_string();
+            } else if humidity < 0.83 {
+                biome = "temperate deciduous forest".to_string();
+            } else {
+                biome = "temperate rainforest".to_string();
+            }
+        } else {
+            if humidity < 0.16 {
+                biome = "shrubland".to_string();
+            } else if humidity < 0.33 {
+                biome = "taiga".to_string();
+            } else if humidity < 0.66 {
+                biome = "temperate rainforest".to_string();
+            } else {
+                biome = "tropical rainforest".to_string();
+            }
+        }
+    }
+
+    biome
 }
