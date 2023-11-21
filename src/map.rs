@@ -13,39 +13,34 @@ struct NoiseTemplate {
     octaves: usize,
 }
 
+#[allow(dead_code)]
+#[derive(Clone)]
 pub struct Noise {
-    #[allow(dead_code)]
     noise: Fbm<Perlin>,
     name: String,
 }
 
-pub fn generate_map(seed: u32) {
-    let types = get_map_types();
-    let mut noises: Vec<Noise> = Vec::new();
+impl Noise {
+    pub fn new(noise: Fbm<Perlin>, name: String) -> Self {
+        Self { noise, name }
+    }
 
-    let mut index: u32 = 0;
+    pub fn get(&self, point: [f64; 2]) -> f64 {
+        self.noise.get(point)
+    }
+}
 
-    types.iter().for_each(|t| {
-        let noise = generate_noise_fn(seed + index, t);
+pub fn generate_map(seed: u32) -> (NoiseMap, Vec<Noise>) {
+    let noises = generate_noises(seed);
 
-        noises.push(Noise {
-            noise: noise.clone(),
-            name: t.name.to_owned(),
-        });
-
-        imagerender_mapbuilder_raw(&noise, &format!("{}.png", noises[index as usize].name));
-
-        index += 1;
+    noises.iter().for_each(|n| {
+        imagerender_mapbuilder_raw(&n.noise, &format!("{}.png", n.name));
     });
 
-    imagerender_mapbuilder(
-        &build(16, 16, 0.0, 0.1, 0.0, 0.1, true, seed),
-        "merged-small.png",
-    );
-    imagerender_mapbuilder(
-        &build(10000, 10000, 0.0, 10.0, 0.0, 10.0, true, seed),
-        "merged.png",
-    );
+    let noise_map = build(160, 160, 0.0, 10.0, 0.0, 10.0, true, seed);
+    imagerender_mapbuilder(&noise_map, "merged-chunk.png");
+
+    return (noise_map, noises);
 }
 
 fn generate_noise_fn(seed: u32, t: &NoiseTemplate) -> Fbm<Perlin> {
@@ -56,10 +51,16 @@ fn generate_noise_fn(seed: u32, t: &NoiseTemplate) -> Fbm<Perlin> {
         .set_octaves(t.octaves)
 }
 
-fn generate_noises(seed: u32) -> Vec<Fbm<Perlin>> {
+fn generate_noises(seed: u32) -> Vec<Noise> {
+    let mut index = 0;
+
     get_map_types()
         .iter()
-        .map(|t| generate_noise_fn(seed, t))
+        .map(|t| {
+            index += 1;
+
+            Noise::new(generate_noise_fn(seed + index, t), t.name.to_owned())
+        })
         .collect()
 }
 
@@ -67,23 +68,23 @@ fn get_map_types() -> Vec<NoiseTemplate> {
     vec![
         NoiseTemplate {
             name: "height".to_string(),
-            frequency: 1.0,
-            persistence: 0.5,
-            lacunarity: 1.608984375,
+            frequency: 0.7,
+            persistence: 0.1,
+            lacunarity: 2.1,
             octaves: 4,
         },
         NoiseTemplate {
             name: "temperature".to_string(),
-            frequency: 1.0,
+            frequency: 0.3,
             persistence: 0.5,
             lacunarity: 1.8,
             octaves: 4,
         },
         NoiseTemplate {
             name: "humidity".to_string(),
-            frequency: 1.0,
+            frequency: 0.2,
             persistence: 0.5,
-            lacunarity: 2.1,
+            lacunarity: 2.0,
             octaves: 4,
         },
     ]
@@ -97,10 +98,10 @@ fn imagerender_mapbuilder_raw(noise_map: &noise::Fbm<noise::Perlin>, filename: &
 
 fn mapbuilder_raw(noise_map: &noise::Fbm<noise::Perlin>) -> NoiseMap {
     PlaneMapBuilder::<&noise::Cache<&noise::Fbm<noise::Perlin>>, 2>::new(&Cache::new(noise_map))
-        .set_size(16, 16)
+        .set_size(160, 160)
         .set_is_seamless(true)
-        .set_x_bounds(0.0, 1.0)
-        .set_y_bounds(0.0, 1.0)
+        .set_x_bounds(0.0, 10.0)
+        .set_y_bounds(0.0, 10.0)
         .build()
 }
 
@@ -127,20 +128,15 @@ fn build_terrain_gradient() -> ColorGradient {
         .add_gradient_point(0.9, [255, 255, 255, 255]) // snow
 }
 
-pub fn get_points(point: [f64; 2], noises: &Vec<Fbm<Perlin>>) -> Vec<f64> {
-    let types = get_map_types();
-
-    let point = [point[0] * 10.0, point[1] * 10.0];
-
-    (0..types.len())
-        .map(|i| get_point(point, &noises[i]))
-        .collect()
+// Gets the point at the given coordinates, run through the biome conversion
+pub fn get_point(point: [f64; 2], noises: &Vec<Noise>) -> f64 {
+    get_biome_as_f64(get_biome(get_points(point, noises)))
 }
 
-pub fn get_point(point: [f64; 2], noise: &Fbm<Perlin>) -> f64 {
-    let point = [point[0], point[1]];
-
-    noise.get(point)
+// Gets the point at the given coordinates for all noises,
+// not run through the biome conversion
+pub fn get_points(point: [f64; 2], noises: &Vec<Noise>) -> Vec<f64> {
+    (0..noises.len()).map(|i| noises[i].get(point)).collect()
 }
 
 pub fn get_biome_as_f64(biome: String) -> f64 {
@@ -166,7 +162,7 @@ pub fn get_biome(points: Vec<f64>) -> String {
 
     let biome: String;
 
-    if height <= -0.5 {
+    if height <= -0.3 {
         biome = "deep_ocean".to_string();
     } else if height <= -0.1 {
         biome = "ocean".to_string();
@@ -236,10 +232,10 @@ fn build(
             let points = get_points([current_x, current_y], &noises);
 
             let final_value = if is_seamless {
-                let sw_value = get_point([current_x, current_y], &noise);
-                let se_value = get_point([current_x + x_extent, current_y], &noise);
-                let nw_value = get_point([current_x, current_y + y_extent], &noise);
-                let ne_value = get_point([current_x + x_extent, current_y + y_extent], &noise);
+                let sw_value = noise.get([current_x, current_y]);
+                let se_value = noise.get([current_x + x_extent, current_y]);
+                let nw_value = noise.get([current_x, current_y + y_extent]);
+                let ne_value = noise.get([current_x + x_extent, current_y + y_extent]);
 
                 let x_blend = 1.0 - ((current_x - x_bounds.0) / x_extent);
                 let y_blend = 1.0 - ((current_y - y_bounds.0) / y_extent);
