@@ -30,17 +30,27 @@ impl Noise {
     }
 }
 
-pub fn generate_map(seed: u32) -> (NoiseMap, Vec<Noise>) {
+pub fn generate_map(
+    width: usize,
+    height: usize,
+    x1: f64,
+    x2: f64,
+    y1: f64,
+    y2: f64,
+    is_seamless: bool,
+    seed: u32,
+) -> (NoiseMap, Vec<Noise>) {
     let noises = generate_noises(seed);
 
     noises.iter().for_each(|n| {
         imagerender_mapbuilder_raw(&n.noise, &format!("{}.png", n.name));
     });
 
-    let noise_map = build(160, 160, 0.0, 10.0, 0.0, 10.0, true, seed);
+    let noise_map = build(width, height, x1, x2, y1, y2, is_seamless, seed);
+
     imagerender_mapbuilder(&noise_map, "merged-chunk.png");
 
-    return (noise_map, noises);
+    (noise_map, noises)
 }
 
 fn generate_noise_fn(seed: u32, t: &NoiseTemplate) -> Fbm<Perlin> {
@@ -128,10 +138,108 @@ fn build_terrain_gradient() -> ColorGradient {
         .add_gradient_point(0.9, [255, 255, 255, 255]) // snow
 }
 
-// Gets the point at the given coordinates, run through the biome conversion
-pub fn get_point(point: [f64; 2], noises: &Vec<Noise>) -> f64 {
-    get_biome_as_f64(get_biome(get_points(point, noises)))
+pub fn reconstruct_map(
+    width: usize,
+    height: usize,
+    x1: f64,
+    x2: f64,
+    y1: f64,
+    y2: f64,
+    is_seamless: bool,
+    noises: &Vec<Noise>,
+) -> NoiseMap {
+    let mut noise = NoiseMap::new(width, height);
+
+    for y in 0..height {
+        for x in 0..width {
+            noise.set_value(
+                x,
+                y,
+                get_point(
+                    [x as f64, y as f64],
+                    noises,
+                    width,
+                    height,
+                    x1,
+                    x2,
+                    y1,
+                    y2,
+                    is_seamless,
+                ),
+            );
+        }
+    }
+    ImageRenderer::new()
+        // .set_gradient(ColorGradient::new().build_terrain_gradient())
+        .set_gradient(build_terrain_gradient())
+        .render(&noise)
+        .write_to_file("debug-reconstructed.png");
+
+    noise
 }
+
+pub fn convert_point(
+    point: [f64; 2],
+    noises: &Vec<Noise>,
+    width: usize,
+    height: usize,
+    x1: f64,
+    x2: f64,
+    y1: f64,
+    y2: f64,
+    is_seamless: bool,
+) -> Vec<f64> {
+    let x_extent = x2 - x1;
+    let y_extent = y2 - y1;
+
+    let x_step = x_extent / width as f64;
+    let y_step = y_extent / height as f64;
+
+    let current_x = x1 + x_step * point[0];
+    let current_y = y1 + y_step * point[1];
+
+    let points = get_points([current_x, current_y], &noises);
+
+    let final_value = if is_seamless {
+        let sw_value = noises[0].get([current_x, current_y]);
+        let se_value = noises[0].get([current_x + x_extent, current_y]);
+        let nw_value = noises[0].get([current_x, current_y + y_extent]);
+        let ne_value = noises[0].get([current_x + x_extent, current_y + y_extent]);
+
+        let x_blend = 1.0 - ((current_x - x1) / x_extent);
+        let y_blend = 1.0 - ((current_y - y1) / y_extent);
+
+        let y0 = linear(sw_value, se_value, x_blend);
+        let y1 = linear(nw_value, ne_value, x_blend);
+
+        linear(y0, y1, y_blend)
+    } else {
+        noises[0].get([current_x, current_y])
+    };
+
+    vec![final_value, points[1], points[2]]
+}
+
+pub fn get_point(
+    point: [f64; 2],
+    noises: &Vec<Noise>,
+    width: usize,
+    height: usize,
+    x1: f64,
+    x2: f64,
+    y1: f64,
+    y2: f64,
+    is_seamless: bool,
+) -> f64 {
+    let converted_point = convert_point(point, noises, width, height, x1, x2, y1, y2, is_seamless);
+
+    get_biome_as_f64(get_biome(converted_point))
+}
+
+// Gets the point at the given coordinates, run through the biome conversion
+// pub fn get_point_literally(point: [f64; 2], noises: &Vec<Noise>) -> f64 {
+//     get_biome_as_f64(get_biome(get_points(point, noises)))
+// }
 
 // Gets the point at the given coordinates for all noises,
 // not run through the biome conversion
