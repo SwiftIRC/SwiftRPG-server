@@ -1,9 +1,16 @@
+#[macro_use]
+extern crate rocket;
+
 mod map;
+mod web;
 
-use map::generate_map;
-use map::reconstruct_map;
+use map::*;
+use std::thread;
+use std::time::Duration;
+use web::state::RocketState;
 
-fn main() {
+#[rocket::main]
+async fn main() {
     const CURRENT_SEED: u32 = 1000;
 
     const CHUNK_WIDTH: usize = 160;
@@ -25,7 +32,17 @@ fn main() {
         CURRENT_SEED,
     );
 
-    reconstruct_map(
+    thread::spawn(|| loop {
+        let now = chrono::Local::now();
+        let timestamp = now.format("%T").to_string();
+        println!("{}", timestamp);
+
+        thread::sleep(Duration::from_secs(5));
+    });
+
+    let state = RocketState::new(
+        noises,
+        CURRENT_SEED,
         CHUNK_WIDTH,
         CHUNK_HEIGHT,
         CHUNK_X1,
@@ -33,6 +50,7 @@ fn main() {
         CHUNK_Y1,
         CHUNK_Y2,
         IS_SEAMLESS,
-        &noises,
     );
+
+    web::rocket(state.to_owned()).await;
 }

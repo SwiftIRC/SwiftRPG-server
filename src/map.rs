@@ -4,6 +4,7 @@ extern crate noise;
 use ::core::ops::Sub;
 use noise::{utils::*, *};
 use num_traits::MulAdd;
+use rocket::serde::{Deserialize, Serialize};
 
 struct NoiseTemplate {
     name: String,
@@ -14,7 +15,7 @@ struct NoiseTemplate {
 }
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Noise {
     noise: Fbm<Perlin>,
     name: String,
@@ -27,6 +28,37 @@ impl Noise {
 
     pub fn get(&self, point: [f64; 2]) -> f64 {
         self.noise.get(point)
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Point {
+    point: (i32, i32),
+    converted_point: Vec<f64>,
+    height: f64,
+    biome: String,
+    trees: i32,
+    rocks: i32,
+}
+
+impl Point {
+    pub fn new(
+        point: (i32, i32),
+        converted_point: Vec<f64>,
+        height: f64,
+        biome: String,
+        trees: i32,
+        rocks: i32,
+    ) -> Point {
+        Point {
+            point: point,
+            converted_point: converted_point,
+            height: height,
+            biome: biome,
+            trees: trees,
+            rocks: rocks,
+        }
     }
 }
 
@@ -138,6 +170,7 @@ fn build_terrain_gradient() -> ColorGradient {
         .add_gradient_point(0.9, [255, 255, 255, 255]) // snow
 }
 
+#[allow(dead_code)]
 pub fn reconstruct_map(
     width: usize,
     height: usize,
@@ -152,21 +185,19 @@ pub fn reconstruct_map(
 
     for y in 0..height {
         for x in 0..width {
-            noise.set_value(
-                x,
-                y,
-                get_point(
-                    [x as f64, y as f64],
-                    noises,
-                    width,
-                    height,
-                    x1,
-                    x2,
-                    y1,
-                    y2,
-                    is_seamless,
-                ),
+            let point: f64 = get_point(
+                [x as f64, y as f64],
+                noises,
+                width,
+                height,
+                x1,
+                x2,
+                y1,
+                y2,
+                is_seamless,
             );
+
+            noise.set_value(x, y, point);
         }
     }
     ImageRenderer::new()
@@ -235,11 +266,6 @@ pub fn get_point(
 
     get_biome_as_f64(get_biome(converted_point))
 }
-
-// Gets the point at the given coordinates, run through the biome conversion
-// pub fn get_point_literally(point: [f64; 2], noises: &Vec<Noise>) -> f64 {
-//     get_biome_as_f64(get_biome(get_points(point, noises)))
-// }
 
 // Gets the point at the given coordinates for all noises,
 // not run through the biome conversion
