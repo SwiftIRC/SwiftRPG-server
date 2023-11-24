@@ -2,17 +2,12 @@ use crate::map::data::Noise;
 
 pub fn trees(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     let trees: i32;
-    let tree_modifier: i32;
-
-    if biome == "rainforest" {
-        tree_modifier = 5;
-    } else if biome == "forest" {
-        tree_modifier = 3;
-    } else if biome == "grassland" || biome == "mountain" || biome == "snow" {
-        tree_modifier = 2;
-    } else {
-        tree_modifier = 0;
-    }
+    let tree_modifier: i32 = match biome {
+        "rainforest" => 5,
+        "forest" => 3,
+        "grassland" | "mountain" | "snow" => 2,
+        _ => 0,
+    };
 
     let humidity = noises[2].get(point) + 1.0;
 
