@@ -1,7 +1,7 @@
 extern crate noise;
 extern crate rocket;
 
-use crate::map::*;
+use crate::map::data::*;
 use rocket::serde::Serialize;
 use serde::ser::SerializeStruct;
 

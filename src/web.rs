@@ -5,7 +5,8 @@ pub mod state;
 use crate::map;
 use state::RocketState;
 
-use map::*;
+use map::data::*;
+use map::fns::*;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rocket::{routes, State};

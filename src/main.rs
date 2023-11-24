@@ -4,7 +4,7 @@ extern crate rocket;
 mod map;
 mod web;
 
-use map::*;
+use map::fns::generate_map;
 use std::thread;
 use std::time::Duration;
 use web::state::RocketState;
