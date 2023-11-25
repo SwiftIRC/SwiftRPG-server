@@ -6,21 +6,12 @@ use ::core::ops::Sub;
 use noise::{utils::*, *};
 use num_traits::MulAdd;
 
-pub fn generate_map(
-    width: usize,
-    height: usize,
-    x1: f64,
-    x2: f64,
-    y1: f64,
-    y2: f64,
-    is_seamless: bool,
-    noises: &Vec<Noise>,
-) -> NoiseMap {
+pub fn generate_map(chunk: &Chunk, noises: &Vec<Noise>) -> NoiseMap {
     noises.iter().for_each(|n| {
         imagerender_mapbuilder_raw(&n.noise, &format!("{}.png", n.name));
     });
 
-    let noise_map = build(width, height, x1, x2, y1, y2, is_seamless, noises);
+    let noise_map = build(&chunk, noises);
 
     imagerender_mapbuilder(&noise_map, "merged-chunk.png");
 
@@ -275,38 +266,29 @@ pub fn get_biome(points: Vec<f64>) -> String {
     biome
 }
 
-fn build(
-    width: usize,
-    height: usize,
-    x1: f64,
-    x2: f64,
-    y1: f64,
-    y2: f64,
-    is_seamless: bool,
-    noises: &Vec<Noise>,
-) -> NoiseMap {
-    let mut result_map = NoiseMap::new(width, height);
+fn build(chunk: &Chunk, noises: &Vec<Noise>) -> NoiseMap {
+    let mut result_map = NoiseMap::new(chunk.width, chunk.height);
 
     let noise = noises.first().unwrap();
 
-    let x_bounds = (x1, x2);
-    let y_bounds = (y1, y2);
+    let x_bounds = (chunk.x1, chunk.x2);
+    let y_bounds = (chunk.y1, chunk.y2);
 
     let x_extent = x_bounds.1 - x_bounds.0;
     let y_extent = y_bounds.1 - y_bounds.0;
 
-    let x_step = x_extent / width as f64;
-    let y_step = y_extent / height as f64;
+    let x_step = x_extent / chunk.width as f64;
+    let y_step = y_extent / chunk.height as f64;
 
-    for y in 0..height {
+    for y in 0..chunk.height {
         let current_y = y_bounds.0 + y_step * y as f64;
 
-        for x in 0..width {
+        for x in 0..chunk.width {
             let current_x = x_bounds.0 + x_step * x as f64;
 
             let points = get_points([current_x, current_y], &noises);
 
-            let final_value = if is_seamless {
+            let final_value = if chunk.is_seamless {
                 let sw_value = noise.get([current_x, current_y]);
                 let se_value = noise.get([current_x + x_extent, current_y]);
                 let nw_value = noise.get([current_x, current_y + y_extent]);

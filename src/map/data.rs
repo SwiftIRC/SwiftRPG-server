@@ -59,13 +59,13 @@ impl Point {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Chunk {
-    width: usize,
-    height: usize,
-    x1: f64,
-    x2: f64,
-    y1: f64,
-    y2: f64,
-    is_seamless: bool,
+    pub width: usize,
+    pub height: usize,
+    pub x1: f64,
+    pub x2: f64,
+    pub y1: f64,
+    pub y2: f64,
+    pub is_seamless: bool,
 }
 
 impl Chunk {

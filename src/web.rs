@@ -18,13 +18,13 @@ fn map_endpoint(x: i32, y: i32, state: &State<RocketState>) -> String {
     let converted_point = convert_point(
         [x as f64, y as f64],
         &state.noises,
-        state.width,
-        state.height,
-        state.x1,
-        state.x2,
-        state.y1,
-        state.y2,
-        state.is_seamless,
+        state.chunk.width,
+        state.chunk.height,
+        state.chunk.x1,
+        state.chunk.x2,
+        state.chunk.y1,
+        state.chunk.y2,
+        state.chunk.is_seamless,
     );
 
     let biome = get_biome(converted_point.to_owned());
