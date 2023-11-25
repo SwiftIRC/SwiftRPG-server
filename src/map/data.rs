@@ -1,7 +1,9 @@
 extern crate image;
 extern crate noise;
 
+use crate::map::resources::*;
 use noise::*;
+
 use rocket::serde::{Deserialize, Serialize};
 
 pub struct NoiseTemplate {
@@ -36,8 +38,7 @@ pub struct Point {
     converted_point: Vec<f64>,
     height: f64,
     biome: String,
-    trees: i32,
-    rocks: i32,
+    resources: Resources,
 }
 
 impl Point {
@@ -46,16 +47,14 @@ impl Point {
         converted_point: Vec<f64>,
         height: f64,
         biome: String,
-        trees: i32,
-        rocks: i32,
+        resources: Resources,
     ) -> Point {
         Point {
             point: point,
             converted_point: converted_point,
             height: height,
             biome: biome,
-            trees: trees,
-            rocks: rocks,
+            resources: resources,
         }
     }
 }

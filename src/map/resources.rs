@@ -1,11 +1,22 @@
+use serde::{Deserialize, Serialize};
+
 use crate::map::data::Noise;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Resources {
+    pub trees: i32,
+    pub rocks: i32,
+    pub herbs: i32,
+    pub fruits: i32,
+}
 
 pub fn trees(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     let trees: i32;
     let tree_modifier: i32 = match biome {
         "rainforest" => 5,
         "forest" => 3,
-        "grassland" | "mountain" | "snow" => 2,
+        "grassland" | "mountain" => 2,
+        "snow" => 1,
         _ => 0,
     };
 
@@ -34,4 +45,41 @@ pub fn rocks(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     println!("Rocks: {} || Modifier: {}", rocks, rock_modifier);
 
     rocks * rock_modifier
+}
+
+pub fn herbs(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
+    let herbs: i32;
+    let herb_modifier: i32 = match biome {
+        "rainforest" => 5,
+        "forest" => 3,
+        "grassland" | "mountain" => 2,
+        "tundra" | "snow" => 1,
+        _ => 0,
+    };
+
+    let humidity = noises[2].get(point) + 1.0;
+
+    herbs = (humidity * 3.0) as i32;
+
+    println!("Herbs: {} || Modifier: {}", herbs, herb_modifier);
+
+    herbs * herb_modifier
+}
+
+pub fn fruits(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
+    let fruits: i32;
+    let fruit_modifier: i32 = match biome {
+        "rainforest" => 5,
+        "forest" => 3,
+        "grassland" | "mountain" | "snow" => 2,
+        _ => 0,
+    };
+
+    let humidity = noises[2].get(point) + 1.0;
+
+    fruits = (humidity * 4.0) as i32;
+
+    println!("Fruits: {} || Modifier: {}", fruits, fruit_modifier);
+
+    fruits * fruit_modifier
 }
