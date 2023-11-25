@@ -31,8 +31,16 @@ fn map_endpoint(x: i32, y: i32, state: &State<RocketState>) -> String {
     let height = get_biome_as_f64(biome.to_owned());
 
     let tree_count: i32 = trees(&state.noises, [x as f64, y as f64], &biome);
+    let rock_count: i32 = rocks(&state.noises, [x as f64, y as f64], &biome);
 
-    let point = Point::new(point, converted_point, height, biome, tree_count, 0);
+    let point = Point::new(
+        point,
+        converted_point,
+        height,
+        biome,
+        tree_count,
+        rock_count,
+    );
 
     json!(point).to_string()
 }

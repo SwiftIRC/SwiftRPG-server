@@ -34,7 +34,7 @@ async fn main() {
 
     thread::spawn(|| loop {
         let now = chrono::Local::now();
-        let timestamp = now.format("%T").to_string();
+        let timestamp = now.format("%D %T").to_string();
         println!("{}", timestamp);
 
         thread::sleep(Duration::from_secs(5));
