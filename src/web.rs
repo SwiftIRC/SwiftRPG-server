@@ -30,17 +30,7 @@ fn map_endpoint(x: i32, y: i32, state: &State<RocketState>) -> String {
     let biome = get_biome(converted_point.to_owned());
     let height = get_biome_as_f64(biome.to_owned());
 
-    let tree_count: i32 = trees(&state.noises, [x as f64, y as f64], &biome);
-    let rock_count: i32 = rocks(&state.noises, [x as f64, y as f64], &biome);
-    let herb_count: i32 = herbs(&state.noises, [x as f64, y as f64], &biome);
-    let fruit_count: i32 = fruits(&state.noises, [x as f64, y as f64], &biome);
-
-    let resources = Resources {
-        trees: tree_count,
-        rocks: rock_count,
-        herbs: herb_count,
-        fruits: fruit_count,
-    };
+    let resources = Resources::new(&state.noises, [x as f64, y as f64], &biome);
 
     let point = Point::new(point, converted_point, height, biome, resources);
 

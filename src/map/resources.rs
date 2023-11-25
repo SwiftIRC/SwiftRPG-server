@@ -10,6 +10,17 @@ pub struct Resources {
     pub fruits: i32,
 }
 
+impl Resources {
+    pub fn new(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> Self {
+        Self {
+            trees: trees(noises, point, biome),
+            rocks: rocks(noises, point, biome),
+            herbs: herbs(noises, point, biome),
+            fruits: fruits(noises, point, biome),
+        }
+    }
+}
+
 pub fn trees(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     let trees: i32;
     let tree_modifier: i32 = match biome {
@@ -71,7 +82,7 @@ pub fn fruits(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     let fruit_modifier: i32 = match biome {
         "rainforest" => 5,
         "forest" => 3,
-        "grassland" | "mountain" | "snow" => 2,
+        "grassland" | "mountain" => 2,
         _ => 0,
     };
 
