@@ -14,19 +14,17 @@ pub fn generate_map(
     y1: f64,
     y2: f64,
     is_seamless: bool,
-    seed: u32,
-) -> (NoiseMap, Vec<Noise>) {
-    let noises = generate_noises(seed);
-
+    noises: &Vec<Noise>,
+) -> NoiseMap {
     noises.iter().for_each(|n| {
         imagerender_mapbuilder_raw(&n.noise, &format!("{}.png", n.name));
     });
 
-    let noise_map = build(width, height, x1, x2, y1, y2, is_seamless, seed);
+    let noise_map = build(width, height, x1, x2, y1, y2, is_seamless, noises);
 
     imagerender_mapbuilder(&noise_map, "merged-chunk.png");
 
-    (noise_map, noises)
+    noise_map
 }
 
 fn generate_noise_fn(seed: u32, t: &NoiseTemplate) -> Fbm<Perlin> {
@@ -37,7 +35,7 @@ fn generate_noise_fn(seed: u32, t: &NoiseTemplate) -> Fbm<Perlin> {
         .set_octaves(t.octaves)
 }
 
-fn generate_noises(seed: u32) -> Vec<Noise> {
+pub fn generate_noises(seed: u32) -> Vec<Noise> {
     let mut index = 0;
 
     get_map_types()
@@ -285,11 +283,10 @@ fn build(
     y1: f64,
     y2: f64,
     is_seamless: bool,
-    seed: u32,
+    noises: &Vec<Noise>,
 ) -> NoiseMap {
     let mut result_map = NoiseMap::new(width, height);
 
-    let noises = generate_noises(seed);
     let noise = noises.first().unwrap();
 
     let x_bounds = (x1, x2);

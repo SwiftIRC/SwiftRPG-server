@@ -5,6 +5,7 @@ mod map;
 mod web;
 
 use map::fns::generate_map;
+use map::fns::generate_noises;
 use std::thread;
 use std::time::Duration;
 use web::state::RocketState;
@@ -21,7 +22,11 @@ async fn main() {
     const CHUNK_Y2: f64 = 10.0;
     const IS_SEAMLESS: bool = true;
 
-    let (_, noises) = generate_map(
+    let noises = generate_noises(CURRENT_SEED);
+
+    let state = RocketState::new(
+        noises.to_owned(),
+        CURRENT_SEED,
         CHUNK_WIDTH,
         CHUNK_HEIGHT,
         CHUNK_X1,
@@ -29,8 +34,20 @@ async fn main() {
         CHUNK_Y1,
         CHUNK_Y2,
         IS_SEAMLESS,
-        CURRENT_SEED,
     );
+
+    thread::spawn(move || {
+        generate_map(
+            CHUNK_WIDTH,
+            CHUNK_HEIGHT,
+            CHUNK_X1,
+            CHUNK_X2,
+            CHUNK_Y1,
+            CHUNK_Y2,
+            IS_SEAMLESS,
+            &noises.to_owned(),
+        );
+    });
 
     thread::spawn(|| loop {
         let now = chrono::Local::now();
@@ -39,18 +56,6 @@ async fn main() {
 
         thread::sleep(Duration::from_secs(5));
     });
-
-    let state = RocketState::new(
-        noises,
-        CURRENT_SEED,
-        CHUNK_WIDTH,
-        CHUNK_HEIGHT,
-        CHUNK_X1,
-        CHUNK_X2,
-        CHUNK_Y1,
-        CHUNK_Y2,
-        IS_SEAMLESS,
-    );
 
     web::rocket(state.to_owned()).await;
 }

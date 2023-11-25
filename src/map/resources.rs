@@ -35,8 +35,6 @@ pub fn trees(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
 
     trees = (humidity * 4.0) as i32;
 
-    println!("Trees: {} || Modifier: {}", trees, tree_modifier);
-
     trees * tree_modifier
 }
 
@@ -52,8 +50,6 @@ pub fn rocks(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     let height = noises[0].get(point) + 1.0;
 
     rocks = (height * 4.0) as i32;
-
-    println!("Rocks: {} || Modifier: {}", rocks, rock_modifier);
 
     rocks * rock_modifier
 }
@@ -72,8 +68,6 @@ pub fn herbs(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
 
     herbs = (humidity * 3.0) as i32;
 
-    println!("Herbs: {} || Modifier: {}", herbs, herb_modifier);
-
     herbs * herb_modifier
 }
 
@@ -89,8 +83,6 @@ pub fn fruits(noises: &Vec<Noise>, point: [f64; 2], biome: &str) -> i32 {
     let humidity = noises[2].get(point) + 1.0;
 
     fruits = (humidity * 4.0) as i32;
-
-    println!("Fruits: {} || Modifier: {}", fruits, fruit_modifier);
 
     fruits * fruit_modifier
 }

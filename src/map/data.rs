@@ -14,7 +14,6 @@ pub struct NoiseTemplate {
     pub octaves: usize,
 }
 
-#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Noise {
     pub noise: Fbm<Perlin>,
@@ -31,7 +30,6 @@ impl Noise {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Point {
     point: (i32, i32),
@@ -55,6 +53,39 @@ impl Point {
             height: height,
             biome: biome,
             resources: resources,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Chunk {
+    width: usize,
+    height: usize,
+    x1: f64,
+    x2: f64,
+    y1: f64,
+    y2: f64,
+    is_seamless: bool,
+}
+
+impl Chunk {
+    pub fn new(
+        width: usize,
+        height: usize,
+        x1: f64,
+        x2: f64,
+        y1: f64,
+        y2: f64,
+        is_seamless: bool,
+    ) -> Chunk {
+        Chunk {
+            width: width,
+            height: height,
+            x1: x1,
+            x2: x2,
+            y1: y1,
+            y2: y2,
+            is_seamless: is_seamless,
         }
     }
 }
