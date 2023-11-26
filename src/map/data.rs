@@ -32,11 +32,11 @@ impl Noise {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Point {
-    point: (i32, i32),
-    converted_point: Vec<f64>,
-    height: f64,
-    biome: String,
-    resources: Resources,
+    pub point: (i32, i32),
+    pub converted_point: Vec<f64>,
+    pub height: f64,
+    pub biome: String,
+    pub resources: Resources,
 }
 
 impl Point {
