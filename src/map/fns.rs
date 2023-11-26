@@ -1,7 +1,7 @@
 extern crate image;
 extern crate noise;
 
-use super::data::{Chunk, Noise, NoiseTemplate, Noises, Points};
+use super::data::{Chunk, Coordinate, Noise, NoiseTemplate, Noises, Points};
 use ::core::ops::Sub;
 use noise::{utils::*, *};
 use num_traits::MulAdd;
@@ -127,7 +127,7 @@ pub fn reconstruct_map(
     for y in 0..height {
         for x in 0..width {
             let point: f64 = get_point(
-                [x as f64, y as f64],
+                Coordinate::new(x as i32, y as i32),
                 noises,
                 width,
                 height,
@@ -151,7 +151,7 @@ pub fn reconstruct_map(
 }
 
 pub fn convert_point(
-    point: [f64; 2],
+    point: Coordinate,
     noises: &Noises,
     width: usize,
     height: usize,
@@ -167,8 +167,8 @@ pub fn convert_point(
     let x_step = x_extent / width as f64;
     let y_step = y_extent / height as f64;
 
-    let current_x = x1 + x_step * point[0];
-    let current_y = y1 + y_step * point[1];
+    let current_x = x1 + x_step * point.x as f64;
+    let current_y = y1 + y_step * point.y as f64;
 
     let points = get_points([current_x, current_y], noises);
 
@@ -195,7 +195,7 @@ pub fn convert_point(
 }
 
 pub fn get_point(
-    point: [f64; 2],
+    point: Coordinate,
     noises: &Noises,
     width: usize,
     height: usize,

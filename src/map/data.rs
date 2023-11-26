@@ -44,8 +44,20 @@ impl Copy for Noise {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Coordinate {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl Coordinate {
+    pub fn new(x: i32, y: i32) -> Coordinate {
+        Coordinate { x: x, y: y }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Point {
-    pub point: (i32, i32),
+    pub point: Coordinate,
     pub converted_point: Points,
     pub height: f64,
     pub biome: String,
@@ -54,7 +66,7 @@ pub struct Point {
 
 impl Point {
     pub fn new(
-        point: (i32, i32),
+        point: Coordinate,
         converted_point: Points,
         height: f64,
         biome: String,

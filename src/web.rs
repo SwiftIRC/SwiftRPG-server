@@ -13,10 +13,10 @@ use serde_json::json;
 
 #[get("/map/<x>/<y>")]
 fn map_endpoint(x: i32, y: i32, state: &State<RocketState>) -> String {
-    let point = (x, y);
+    let point = Coordinate::new(x, y);
 
     let converted_point = convert_point(
-        [x as f64, y as f64],
+        point.to_owned(),
         &state.noises,
         state.chunk.width,
         state.chunk.height,
