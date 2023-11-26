@@ -58,9 +58,6 @@ mod routes {
             ("x", description = "X coordinate"),
             ("y", description = "Y coordinate"),
         ),
-        security(
-            ("api_key" = [])
-        )
     )]
     #[get("/map/<x>/<y>")]
     pub async fn map_endpoint(x: i32, y: i32, state: &State<RocketState>) -> String {
