@@ -30,6 +30,19 @@ impl Noise {
     }
 }
 
+pub trait Copy {
+    fn copy(&self) -> Self;
+}
+
+impl Copy for Noise {
+    fn copy(&self) -> Self {
+        Self {
+            noise: self.noise.clone(),
+            name: self.name.clone(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Point {
     pub point: (i32, i32),
@@ -86,6 +99,44 @@ impl Chunk {
             y1: y1,
             y2: y2,
             is_seamless: is_seamless,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Noises {
+    pub height: Noise,
+    pub temperature: Noise,
+    pub humidity: Noise,
+}
+
+impl Noises {
+    pub fn new(height: Noise, temperature: Noise, humidity: Noise) -> Self {
+        Self {
+            height,
+            temperature,
+            humidity,
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<Noise> {
+        vec![
+            self.height.clone(),
+            self.temperature.clone(),
+            self.humidity.clone(),
+        ]
+    }
+
+    pub fn len(&self) -> usize {
+        3
+    }
+
+    pub fn get(&self, index: usize) -> &Noise {
+        match index {
+            0 => &self.height,
+            1 => &self.temperature,
+            2 => &self.humidity,
+            _ => &self.height,
         }
     }
 }

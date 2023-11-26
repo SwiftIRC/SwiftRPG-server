@@ -7,13 +7,13 @@ use serde::ser::SerializeStruct;
 
 #[derive(Clone, Debug)]
 pub struct RocketState {
-    pub noises: Vec<Noise>,
+    pub noises: Noises,
     pub seed: u32,
     pub chunk: Chunk,
 }
 
 impl RocketState {
-    pub fn new(noises: Vec<Noise>, seed: u32, chunk: Chunk) -> Self {
+    pub fn new(noises: Noises, seed: u32, chunk: Chunk) -> Self {
         Self {
             noises,
             seed,

@@ -1,15 +1,16 @@
 extern crate image;
 extern crate noise;
 
-use super::data::*;
+use super::data::{Chunk, Noise, NoiseTemplate, Noises};
 use ::core::ops::Sub;
 use noise::{utils::*, *};
 use num_traits::MulAdd;
+use std::collections::HashMap;
 
-pub fn generate_map(chunk: &Chunk, noises: &Vec<Noise>) -> NoiseMap {
-    noises.iter().for_each(|n| {
-        imagerender_mapbuilder_raw(&n.noise, &format!("{}.png", n.name));
-    });
+pub fn generate_map(chunk: &Chunk, noises: &Noises) -> NoiseMap {
+    for noise in noises.to_vec() {
+        imagerender_mapbuilder_raw(&noise.noise, &format!("{}.png", noise.name));
+    }
 
     let noise_map = build(&chunk, noises);
 
@@ -26,17 +27,24 @@ fn generate_noise_fn(seed: u32, t: &NoiseTemplate) -> Fbm<Perlin> {
         .set_octaves(t.octaves)
 }
 
-pub fn generate_noises(seed: u32) -> Vec<Noise> {
+pub fn generate_noises(seed: u32) -> Noises {
     let mut index = 0;
 
-    get_map_types()
-        .iter()
-        .map(|t| {
-            index += 1;
+    let mut hashmap = HashMap::new();
 
-            Noise::new(generate_noise_fn(seed + index, t), t.name.to_owned())
-        })
-        .collect()
+    get_map_types().iter().for_each(|t| {
+        index += 1;
+
+        let noise = Noise::new(generate_noise_fn(seed + index, t), t.name.to_owned());
+
+        hashmap.insert(t.name.to_owned(), noise);
+    });
+
+    Noises::new(
+        hashmap["height"].clone(),
+        hashmap["temperature"].clone(),
+        hashmap["humidity"].clone(),
+    )
 }
 
 fn get_map_types() -> Vec<NoiseTemplate> {
@@ -112,7 +120,7 @@ pub fn reconstruct_map(
     y1: f64,
     y2: f64,
     is_seamless: bool,
-    noises: &Vec<Noise>,
+    noises: &Noises,
 ) -> NoiseMap {
     let mut noise = NoiseMap::new(width, height);
 
@@ -144,7 +152,7 @@ pub fn reconstruct_map(
 
 pub fn convert_point(
     point: [f64; 2],
-    noises: &Vec<Noise>,
+    noises: &Noises,
     width: usize,
     height: usize,
     x1: f64,
@@ -162,13 +170,15 @@ pub fn convert_point(
     let current_x = x1 + x_step * point[0];
     let current_y = y1 + y_step * point[1];
 
-    let points = get_points([current_x, current_y], &noises);
+    let points = get_points([current_x, current_y], noises);
 
     let final_value = if is_seamless {
-        let sw_value = noises[0].get([current_x, current_y]);
-        let se_value = noises[0].get([current_x + x_extent, current_y]);
-        let nw_value = noises[0].get([current_x, current_y + y_extent]);
-        let ne_value = noises[0].get([current_x + x_extent, current_y + y_extent]);
+        let sw_value = noises.height.get([current_x, current_y]);
+        let se_value = noises.height.get([current_x + x_extent, current_y]);
+        let nw_value = noises.height.get([current_x, current_y + y_extent]);
+        let ne_value = noises
+            .height
+            .get([current_x + x_extent, current_y + y_extent]);
 
         let x_blend = 1.0 - ((current_x - x1) / x_extent);
         let y_blend = 1.0 - ((current_y - y1) / y_extent);
@@ -178,7 +188,7 @@ pub fn convert_point(
 
         linear(y0, y1, y_blend)
     } else {
-        noises[0].get([current_x, current_y])
+        noises.height.get([current_x, current_y])
     };
 
     vec![final_value, points[1], points[2]]
@@ -186,7 +196,7 @@ pub fn convert_point(
 
 pub fn get_point(
     point: [f64; 2],
-    noises: &Vec<Noise>,
+    noises: &Noises,
     width: usize,
     height: usize,
     x1: f64,
@@ -202,8 +212,10 @@ pub fn get_point(
 
 // Gets the point at the given coordinates for all noises,
 // not run through the biome conversion
-pub fn get_points(point: [f64; 2], noises: &Vec<Noise>) -> Vec<f64> {
-    (0..noises.len()).map(|i| noises[i].get(point)).collect()
+pub fn get_points(point: [f64; 2], noises: &Noises) -> Vec<f64> {
+    (0..noises.len())
+        .map(|i| noises.get(i).get(point))
+        .collect()
 }
 
 pub fn get_biome_as_f64(biome: String) -> f64 {
@@ -266,10 +278,10 @@ pub fn get_biome(points: Vec<f64>) -> String {
     biome
 }
 
-fn build(chunk: &Chunk, noises: &Vec<Noise>) -> NoiseMap {
+fn build(chunk: &Chunk, noises: &Noises) -> NoiseMap {
     let mut result_map = NoiseMap::new(chunk.width, chunk.height);
 
-    let noise = noises.first().unwrap();
+    let noise = &noises.height;
 
     let x_bounds = (chunk.x1, chunk.x2);
     let y_bounds = (chunk.y1, chunk.y2);
