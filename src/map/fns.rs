@@ -1,7 +1,7 @@
 extern crate image;
 extern crate noise;
 
-use super::data::{Chunk, Noise, NoiseTemplate, Noises};
+use super::data::{Chunk, Noise, NoiseTemplate, Noises, Points};
 use ::core::ops::Sub;
 use noise::{utils::*, *};
 use num_traits::MulAdd;
@@ -160,7 +160,7 @@ pub fn convert_point(
     y1: f64,
     y2: f64,
     is_seamless: bool,
-) -> Vec<f64> {
+) -> Points {
     let x_extent = x2 - x1;
     let y_extent = y2 - y1;
 
@@ -191,7 +191,7 @@ pub fn convert_point(
         noises.height.get([current_x, current_y])
     };
 
-    vec![final_value, points[1], points[2]]
+    Points::new(final_value, points.temperature, points.humidity)
 }
 
 pub fn get_point(
@@ -212,10 +212,12 @@ pub fn get_point(
 
 // Gets the point at the given coordinates for all noises,
 // not run through the biome conversion
-pub fn get_points(point: [f64; 2], noises: &Noises) -> Vec<f64> {
-    (0..noises.len())
-        .map(|i| noises.get(i).get(point))
-        .collect()
+pub fn get_points(point: [f64; 2], noises: &Noises) -> Points {
+    Points::new(
+        noises.height.get(point),
+        noises.temperature.get(point),
+        noises.humidity.get(point),
+    )
 }
 
 pub fn get_biome_as_f64(biome: String) -> f64 {
@@ -234,42 +236,38 @@ pub fn get_biome_as_f64(biome: String) -> f64 {
     }
 }
 
-pub fn get_biome(points: Vec<f64>) -> String {
-    let height = points[0];
-    let temperature = points[1];
-    let humidity = points[2];
-
+pub fn get_biome(points: Points) -> String {
     let biome: String;
 
-    if height <= -0.3 {
+    if points.height <= -0.3 {
         biome = "deep_ocean".to_string();
-    } else if height <= -0.1 {
+    } else if points.height <= -0.1 {
         biome = "ocean".to_string();
-    } else if height <= 0.0 {
+    } else if points.height <= 0.0 {
         biome = "sand".to_string();
-    } else if height <= 0.5 {
-        if temperature <= 0.0 {
+    } else if points.height <= 0.5 {
+        if points.temperature <= 0.0 {
             biome = "tundra".to_string();
-        } else if temperature >= 0.7 {
-            if humidity <= 0.0 {
+        } else if points.temperature >= 0.7 {
+            if points.humidity <= 0.0 {
                 biome = "desert".to_string();
-            } else if humidity <= 0.2 {
+            } else if points.humidity <= 0.2 {
                 biome = "grassland".to_string();
-            } else if humidity <= 0.4 {
+            } else if points.humidity <= 0.4 {
                 biome = "forest".to_string();
             } else {
                 biome = "rainforest".to_string();
             }
-        } else if humidity <= 0.33 {
+        } else if points.humidity <= 0.33 {
             biome = "grassland".to_string();
-        } else if humidity >= 0.66 {
+        } else if points.humidity >= 0.66 {
             biome = "forest".to_string();
-        } else if height <= 0.2 {
+        } else if points.height <= 0.2 {
             biome = "grassland".to_string();
         } else {
             biome = "forest".to_string();
         }
-    } else if height <= 0.8 {
+    } else if points.height <= 0.8 {
         biome = "mountain".to_string();
     } else {
         biome = "snow".to_string();
@@ -314,11 +312,14 @@ fn build(chunk: &Chunk, noises: &Noises) -> NoiseMap {
 
                 linear(y0, y1, y_blend)
             } else {
-                points[0]
+                points.height
             };
 
-            result_map[(x, y)] =
-                get_biome_as_f64(get_biome(vec![final_value, points[1], points[2]]));
+            result_map[(x, y)] = get_biome_as_f64(get_biome(Points::new(
+                final_value,
+                points.temperature,
+                points.humidity,
+            )));
         }
     }
 

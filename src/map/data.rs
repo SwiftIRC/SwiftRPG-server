@@ -46,7 +46,7 @@ impl Copy for Noise {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Point {
     pub point: (i32, i32),
-    pub converted_point: Vec<f64>,
+    pub converted_point: Points,
     pub height: f64,
     pub biome: String,
     pub resources: Resources,
@@ -55,7 +55,7 @@ pub struct Point {
 impl Point {
     pub fn new(
         point: (i32, i32),
-        converted_point: Vec<f64>,
+        converted_point: Points,
         height: f64,
         biome: String,
         resources: Resources,
@@ -66,6 +66,23 @@ impl Point {
             height: height,
             biome: biome,
             resources: resources,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Points {
+    pub height: f64,
+    pub temperature: f64,
+    pub humidity: f64,
+}
+
+impl Points {
+    pub fn new(height: f64, temperature: f64, humidity: f64) -> Self {
+        Self {
+            height,
+            temperature,
+            humidity,
         }
     }
 }
@@ -125,18 +142,5 @@ impl Noises {
             self.temperature.clone(),
             self.humidity.clone(),
         ]
-    }
-
-    pub fn len(&self) -> usize {
-        3
-    }
-
-    pub fn get(&self, index: usize) -> &Noise {
-        match index {
-            0 => &self.height,
-            1 => &self.temperature,
-            2 => &self.humidity,
-            _ => &self.height,
-        }
     }
 }
