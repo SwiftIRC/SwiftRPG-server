@@ -26,7 +26,7 @@ pub async fn rocket(state: RocketState) {
         .mount("/api", routes![routes::map_endpoint])
         .mount(
             "/",
-            SwaggerUi::new("/docs/<_..>").url("/api-docs/openapi.json", ApiDoc::openapi()),
+            SwaggerUi::new("/docs/api/<_..>").url("/docs/api/openapi.json", ApiDoc::openapi()),
         )
         .launch()
         .await
