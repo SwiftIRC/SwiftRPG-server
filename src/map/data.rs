@@ -5,6 +5,7 @@ use crate::map::resources::*;
 use noise::*;
 
 use rocket::serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 pub struct NoiseTemplate {
     pub name: String,
@@ -43,7 +44,7 @@ impl Copy for Noise {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 pub struct Coordinate {
     pub x: i32,
     pub y: i32,
@@ -55,7 +56,7 @@ impl Coordinate {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 pub struct Point {
     pub point: Coordinate,
     pub converted_point: Points,
@@ -82,7 +83,7 @@ impl Point {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 pub struct Points {
     pub height: f64,
     pub temperature: f64,
@@ -99,7 +100,7 @@ impl Points {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 pub struct Chunk {
     pub width: usize,
     pub height: usize,

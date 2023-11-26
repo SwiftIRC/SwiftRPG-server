@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::map::data::Noises;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+use utoipa::ToSchema;
+
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 pub struct Resources {
     pub trees: i32,
     pub rocks: i32,
