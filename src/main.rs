@@ -11,18 +11,17 @@ use std::thread;
 use std::time::Duration;
 use web::state::RocketState;
 
+const CURRENT_SEED: u32 = 1000;
+const CHUNK_WIDTH: usize = 160;
+const CHUNK_HEIGHT: usize = 160;
+const CHUNK_X1: f64 = 0.0;
+const CHUNK_X2: f64 = 10.0;
+const CHUNK_Y1: f64 = 0.0;
+const CHUNK_Y2: f64 = 10.0;
+const IS_SEAMLESS: bool = true;
+
 #[rocket::main]
 async fn main() {
-    const CURRENT_SEED: u32 = 1000;
-
-    const CHUNK_WIDTH: usize = 160;
-    const CHUNK_HEIGHT: usize = 160;
-    const CHUNK_X1: f64 = 0.0;
-    const CHUNK_X2: f64 = 10.0;
-    const CHUNK_Y1: f64 = 0.0;
-    const CHUNK_Y2: f64 = 10.0;
-    const IS_SEAMLESS: bool = true;
-
     let chunk = Chunk::new(
         CHUNK_WIDTH,
         CHUNK_HEIGHT,
