@@ -6,7 +6,6 @@ use map::data::Chunk;
 use map::fns::generate_map;
 use map::fns::generate_noises;
 use std::thread;
-use std::time::Duration;
 use web::state::RocketState;
 
 const CURRENT_SEED: u32 = 1000;
@@ -38,14 +37,24 @@ async fn main() {
         generate_map(&chunk, &noises.to_owned());
     });
 
-    thread::spawn(|| loop {
+    let mut next_timestamp = 0;
+    let mut next_tick = chrono::Local::now().timestamp();
+    thread::spawn(move || loop {
         let now = chrono::Local::now();
-        let timestamp = now.format("%D %T").to_string();
-        println!("{}", timestamp);
+        let tick = now.timestamp();
 
-        thread::spawn(|| game::tick());
+        if tick >= next_timestamp {
+            next_timestamp = tick + 1;
 
-        thread::sleep(Duration::from_secs(1));
+            if next_tick <= tick {
+                let timestamp = now.format("%D %T").to_string();
+                println!("{}", timestamp);
+
+                thread::spawn(|| game::tick());
+
+                next_tick = tick + 60 - (next_tick % 60);
+            }
+        }
     });
 
     web::rocket(state.to_owned()).await;
