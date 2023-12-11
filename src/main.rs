@@ -1,5 +1,4 @@
-extern crate rocket;
-
+mod game;
 mod map;
 mod web;
 
@@ -44,7 +43,9 @@ async fn main() {
         let timestamp = now.format("%D %T").to_string();
         println!("{}", timestamp);
 
-        thread::sleep(Duration::from_secs(5));
+        thread::spawn(|| game::tick());
+
+        thread::sleep(Duration::from_secs(1));
     });
 
     web::rocket(state.to_owned()).await;

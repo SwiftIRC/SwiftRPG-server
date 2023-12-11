@@ -1,7 +1,3 @@
-extern crate rocket;
-extern crate utoipa;
-extern crate utoipa_swagger_ui;
-
 pub mod state;
 
 use crate::map;
