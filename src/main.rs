@@ -1,7 +1,10 @@
+mod database;
 mod game;
 mod map;
 mod web;
 
+use ctrlc;
+use database::*;
 use map::data::Chunk;
 use map::fns::generate_map;
 use map::fns::generate_noises;
@@ -33,29 +36,53 @@ async fn main() {
 
     let state = RocketState::new(noises.to_owned(), CURRENT_SEED, chunk.to_owned());
 
-    thread::spawn(move || {
-        generate_map(&chunk, &noises.to_owned());
-    });
+    if std::env::var("SWIFTRPG_GENERATE_MAP").unwrap_or("false".to_string()) == "true" {
+        thread::spawn(move || {
+            generate_map(&chunk, &noises.to_owned());
+        });
+    }
 
-    let mut next_timestamp = 0;
-    let mut next_tick = chrono::Local::now().timestamp();
-    thread::spawn(move || loop {
-        let now = chrono::Local::now();
-        let tick = now.timestamp();
+    if std::env::var("SWIFTRPG_CORE").unwrap_or("false".to_string()) == "true" {
+        let mut next_timestamp = 0;
+        let mut next_tick = chrono::Local::now().timestamp();
+        thread::spawn(move || loop {
+            let now = chrono::Local::now();
+            let tick = now.timestamp();
 
-        if tick >= next_timestamp {
-            next_timestamp = tick + 1;
+            // Establish a connection pool
+            let pool = match establish_connection_pool() {
+                Ok(pool) => pool,
+                Err(e) => {
+                    println!("Error establishing MySQL connection: {}", e);
+                    return;
+                }
+            };
 
-            if next_tick <= tick {
-                let timestamp = now.format("%D %T").to_string();
-                println!("{}", timestamp);
+            if tick >= next_timestamp {
+                next_timestamp = tick + 1;
 
-                thread::spawn(|| game::tick());
+                if next_tick <= tick {
+                    let timestamp = now.format("%D %T").to_string();
+                    println!("{}", timestamp);
 
-                next_tick = tick + 60 - (next_tick % 60);
+                    game::tick(&pool);
+
+                    next_tick = tick + 60 - (next_tick % 60);
+                }
             }
-        }
-    });
+        });
+    }
 
-    web::rocket(state.to_owned()).await;
+    if std::env::var("SWIFTRPG_WEBSERVER").unwrap_or("false".to_string()) == "true" {
+        web::rocket(state.to_owned()).await;
+    } else {
+        // wait for ctrl+c
+        let (tx, rx) = std::sync::mpsc::channel();
+        ctrlc::set_handler(move || {
+            tx.send(()).unwrap();
+        })
+        .expect("Error setting Ctrl-C handler");
+
+        rx.recv().unwrap();
+    }
 }
