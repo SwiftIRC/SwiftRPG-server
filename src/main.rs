@@ -49,14 +49,8 @@ async fn main() {
             let now = chrono::Local::now();
             let tick = now.timestamp();
 
-            // Establish a connection pool
-            let pool = match establish_connection_pool() {
-                Ok(pool) => pool,
-                Err(e) => {
-                    println!("Error establishing MySQL connection: {}", e);
-                    return;
-                }
-            };
+            #[allow(unused_mut)]
+            let mut connection = establish_connection();
 
             if tick >= next_timestamp {
                 next_timestamp = tick + 1;
@@ -65,7 +59,7 @@ async fn main() {
                     let timestamp = now.format("%D %T").to_string();
                     println!("{}", timestamp);
 
-                    game::tick(&pool);
+                    game::tick(connection);
 
                     next_tick = tick + 60 - (next_tick % 60);
                 }

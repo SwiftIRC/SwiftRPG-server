@@ -1,11 +1,22 @@
-use crate::database::*;
+use crate::database::models::User;
+use diesel::mysql::MysqlConnection;
 
-pub fn tick(pool: &mysql::Pool) {
-    match execute_query(&pool, "SELECT * FROM users LIMIT 1") {
-        Ok(()) => (),
-        Err(e) => {
-            println!("Error executing MySQL query: {}", e);
-            return;
+pub fn tick(mut connection: MysqlConnection) {
+    match User::star(&mut connection) {
+        Ok(users) => {
+            for user in users {
+                println!("User #{}: {}", user.id, user.name);
+            }
         }
+        Err(e) => println!("Error: {}", e),
+    };
+
+    match User::admins(&mut connection) {
+        Ok(admins) => {
+            for admin in admins {
+                println!("Admin #{}: {}", admin.id, admin.name);
+            }
+        }
+        Err(e) => println!("Error: {}", e),
     };
 }
