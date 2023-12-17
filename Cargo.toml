@@ -21,7 +21,7 @@ rocket = "0.5.0"
 serde = "1.0.193"
 serde_json = "1.0.108"
 utoipa = "4.1.0"
-utoipa-swagger-ui = { version = "4.0.0", features = ["rocket"] }
+utoipa-swagger-ui = { version = "5.0.0", features = ["rocket"] }
 
 [[bin]]
 name = "swiftrpg-server"
